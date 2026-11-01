@@ -3,7 +3,7 @@
    - 連得到伺服器時，永遠拿最新檔案（改程式馬上生效）
    - 連不到時，才用快取（離線也能開）
 */
-const CACHE = 'led-marquee-v1';
+const CACHE = 'led-marquee-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -16,7 +16,12 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(ASSETS)).catch(() => {}));
+  e.waitUntil(
+    caches.open(CACHE).then((c) =>
+      // 一個檔案抓不到（例如圖示還沒上傳）也不會讓整個快取失敗
+      Promise.all(ASSETS.map((u) => c.add(u).catch(() => {})))
+    ).catch(() => {})
+  );
   self.skipWaiting();
 });
 
@@ -42,6 +47,12 @@ self.addEventListener('fetch', (e) => {
         caches.open(CACHE).then((c) => c.put(req, copy)).catch(() => {});
         return res;
       })
-      .catch(() => caches.match(req))
+      .catch(async () => {
+        const hit = await caches.match(req);
+        if (hit) return hit;
+        // 離線時直接開頁面（找不到檔案的導覽請求）
+        if (req.mode === 'navigate') return caches.match('./index.html');
+        return new Response('', { status: 504, statusText: 'offline' });
+      })
   );
 });
