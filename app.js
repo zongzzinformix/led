@@ -194,7 +194,7 @@
   /* ---------------- 設定存取 ---------------- */
 
   function load() {
-    let s = { ...DEFAULTS };
+    let s = { ...DEFAULTS, scenes: [] };
     try {
       const raw = localStorage.getItem(KEY);
       if (raw) {
@@ -221,11 +221,14 @@
     return s;
   }
 
+  function flushSave() {
+    clearTimeout(saveTimer);
+    try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {}
+  }
+
   function save() {
     clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      try { localStorage.setItem(KEY, JSON.stringify(S)); } catch {}
-    }, 180);
+    saveTimer = setTimeout(flushSave, 180);
   }
 
   /* ---------------- 首頁 ---------------- */
@@ -328,6 +331,9 @@
     S.speed = sc.speed == null ? DEFAULTS.speed : clamp(Number(sc.speed), 0, 100);
     S.size = sc.size == null ? DEFAULTS.size : clamp(Number(sc.size), 0, 100);
     S.gap = sc.gap == null ? DEFAULTS.gap : clamp(Number(sc.gap), 0, 100);
+    S.vertical = !!sc.vertical;
+    S.mirror = !!sc.mirror;
+    S.blink = !!sc.blink;
     save();
     openPlay(sc.effect);
   }
@@ -345,7 +351,10 @@
       bold: S.bold,
       speed: S.speed,
       size: S.size,
-      gap: S.gap
+      gap: S.gap,
+      vertical: S.vertical,
+      mirror: S.mirror,
+      blink: S.blink
     });
     S.scenes = S.scenes.slice(0, 20);
     save();
@@ -369,6 +378,7 @@
 
   function openPlay(effectId, opts = {}) {
     if (effectId && EFFECTS.some(e => e.id === effectId)) S.effect = effectId;
+    S.paused = false;
     save();
 
     ui.app.hidden = true;
@@ -378,7 +388,7 @@
     // 讓瀏覽器先算好尺寸（不要用 rAF，背景分頁不會執行）
     void ui.play.offsetWidth;
 
-    const open = opts.sheet !== false;
+    const open = opts.sheet === true;
     setSheet(open, true);
     renderEffect();
     if (open && opts.focus) focusSection(opts.focus);
@@ -875,7 +885,7 @@
     });
 
     // 主預覽卡
-    ui.heroCard.addEventListener('click', () => openPlay('marquee'));
+    ui.heroCard.addEventListener('click', () => openPlay(S.effect));
     ui.heroEdit.addEventListener('click', e => {
       e.stopPropagation();
       openTextModal();
@@ -883,7 +893,7 @@
 
     // 更多
     $$('[data-more]').forEach(b => {
-      b.addEventListener('click', () => openPlay(S.effect, { focus: b.dataset.more }));
+      b.addEventListener('click', () => openPlay(S.effect, { focus: b.dataset.more, sheet: true }));
     });
 
     // 播放頁
@@ -992,8 +1002,9 @@
     const onResize = () => {
       clearTimeout(rz);
       rz = setTimeout(() => {
-        renderHero();
-        if (!ui.play.hidden) {
+        if (ui.play.hidden) {
+          renderHero();
+        } else {
           updateLift();
           renderEffect();
         }
@@ -1005,7 +1016,7 @@
     // 回到前景時重新取得螢幕常亮
     document.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'visible') wakeOn();
-      else if (!ui.play.hidden) save();
+      else flushSave();
     });
   }
 
@@ -1024,6 +1035,12 @@
     buildTools();
     buildEffectList();
     bindEvents();
+    if (document.fonts) {
+      document.fonts.addEventListener('loadingdone', () => {
+        if (ui.play.hidden) renderHero();
+        else renderEffect();
+      });
+    }
     syncMe();
     renderHero();
     renderScenes();
