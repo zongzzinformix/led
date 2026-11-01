@@ -602,15 +602,25 @@ input[type="range"] { accent-color: var(--pink); }
   display: flex;
   flex-direction: column;
   align-items: center;
-  max-width: 93%;
+  justify-content: center;
+  width: 94%;
   max-height: 94%;
 }
 
 .solo {
-  max-width: 94%;
+  display: inline-block;
+  max-width: 100%;
   text-align: center;
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: pre;
+}
+
+/* 直排文字 */
+.stage.is-vtext .solo {
+  writing-mode: vertical-rl;
+  text-orientation: upright;
+  max-width: none;
+  max-height: 90%;
+  white-space: pre;
 }
 
 .neon {
@@ -749,6 +759,21 @@ input[type="range"] { accent-color: var(--pink); }
 
 .sheet__title { font-size: 16px; font-weight: 700; }
 
+.sheet__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sheet__text {
+  border: 0;
+  background: none;
+  color: #ff2d55;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 6px 8px;
+}
+
 .sheet__close {
   width: 34px;
   height: 34px;
@@ -862,14 +887,14 @@ input[type="range"] { accent-color: var(--pink); }
 
 .tools {
   display: flex;
-  gap: 9px;
+  gap: 8px;
   flex-wrap: wrap;
   padding-bottom: 2px;
 }
 
 .tool {
-  width: 44px;
-  height: 44px;
+  width: 42px;
+  height: 42px;
   flex: none;
   border-radius: 10px;
   border: 1.5px solid #d3d3d9;
@@ -917,8 +942,8 @@ input[type="range"] { accent-color: var(--pink); }
   inset: 0;
   z-index: 90;
   display: grid;
-  place-items: center;
-  padding: 24px;
+  place-items: start center;
+  padding: 12vh 24px 24px;
   background: rgba(0, 0, 0, 0.62);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);

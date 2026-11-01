@@ -3,7 +3,7 @@
    - 連得到伺服器時，永遠拿最新檔案（改程式馬上生效）
    - 連不到時，才用快取（離線也能開）
 */
-const CACHE = 'led-marquee-v4';
+const CACHE = 'led-marquee-v5';
 const ASSETS = [
   './',
   './index.html',

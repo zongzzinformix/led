@@ -16,6 +16,13 @@
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="icon" href="icons/icon-192.png">
+
+<!-- 中文字體（Google Fonts，只在用到時下載對應字集） -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" media="print" onload="this.media='all'"
+      href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@700&family=Huninn&family=LXGW+WenKai+TC:wght@700&family=Iansui&display=swap">
+
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -146,7 +153,10 @@
     <div class="sheet" id="sheet">
       <div class="sheet__head">
         <span class="sheet__title" id="sheetTitle">字體</span>
-        <button class="sheet__close" id="sheetClose" aria-label="關閉">✕</button>
+        <span class="sheet__actions">
+          <button class="sheet__text" id="sheetText">編輯文字</button>
+          <button class="sheet__close" id="sheetClose" aria-label="關閉">✕</button>
+        </span>
       </div>
 
       <div class="fonts" id="fontChips"></div>

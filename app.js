@@ -14,11 +14,12 @@
   /* ---------------- 常數 ---------------- */
 
   const FONTS = [
-    { id: 'sans', label: '黑體', css: '-apple-system, "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif' },
-    { id: 'song', label: '宋體', css: '"Songti TC", "STSong", "SimSun", "Times New Roman", serif' },
-    { id: 'round', label: '圓體', css: '"Yuanti TC", ui-rounded, "SF Pro Rounded", "PingFang TC", "Microsoft JhengHei", sans-serif' },
-    { id: 'kai', label: '楷體', css: '"Kaiti TC", "STKaiti", "DFKai-SB", "BiauKai", serif' },
-    { id: 'mono', label: '等寬', css: 'ui-monospace, "SF Mono", Menlo, Consolas, monospace' }
+    { id: 'sans', label: '黑體', css: '"PingFang TC", -apple-system, "Noto Sans TC", "Microsoft JhengHei", system-ui, sans-serif' },
+    { id: 'song', label: '宋體', css: '"Noto Serif TC", "Songti TC", "Songti SC", "SimSun", serif' },
+    { id: 'round', label: '圓體', css: '"Huninn", "Yuanti TC", ui-rounded, "PingFang TC", "Microsoft JhengHei", sans-serif' },
+    { id: 'kai', label: '楷體', css: '"LXGW WenKai TC", "Kaiti TC", "STKaiti", "DFKai-SB", serif' },
+    { id: 'hand', label: '手寫', css: '"Iansui", "Hannotate TC", "Xingkai TC", "DFKai-SB", cursive' },
+    { id: 'mono', label: '等寬', css: '"LXGW WenKai Mono TC", ui-monospace, "SF Mono", Menlo, Consolas, monospace' }
   ];
 
   const EFFECTS = [
@@ -50,6 +51,7 @@
     size: 46,
     blink: false,
     mirror: false,
+    vertical: false,
     paused: false,
     dots: false,
     brightness: 100,
@@ -345,6 +347,7 @@
     ui.stage.style.setProperty('--weight', S.bold ? 700 : 400);
     ui.stage.classList.toggle('is-blink', !!S.blink);
     ui.stage.classList.toggle('is-mirror', !!S.mirror);
+    ui.stage.classList.toggle('is-vtext', !!S.vertical);
     ui.stage.classList.toggle('is-dots', !!S.dots);
     ui.dim.style.opacity = String((100 - S.brightness) / 100);
   }
@@ -433,14 +436,40 @@
     const maxW = ui.stage.clientWidth * 0.93;
     const maxH = ui.stage.clientHeight * 0.92;
     const nodes = $$('.line', wrap);
-    let px = parseFloat(nodes[0]?.style.fontSize || '40') || 40;
+    if (!nodes.length) return;
 
-    for (let i = 0; i < 8; i++) {
-      const r = wrap.getBoundingClientRect();
-      const k = Math.min(maxW / (r.width || 1), maxH / (r.height || 1), 1);
-      if (k > 0.995) break;
-      px = Math.max(8, px * k * 0.97);
-      nodes.forEach(n => { n.style.fontSize = px + 'px'; });
+    const base = parseFloat(nodes[0].style.fontSize) || 40;
+
+    const shrink = () => {
+      for (let i = 0; i < 10; i++) {
+        const r = wrap.getBoundingClientRect();
+        const k = Math.min(maxW / (r.width || 1), maxH / (r.height || 1), 1);
+        if (k > 0.995) break;
+        const px = Math.max(6, (parseFloat(nodes[0].style.fontSize) || base) * k * 0.97);
+        nodes.forEach(n => { n.style.fontSize = px + 'px'; });
+      }
+      return parseFloat(nodes[0].style.fontSize) || base;
+    };
+
+    const vertical = !!S.vertical;
+
+    // 第一輪：不換行，量測真正的文字寬度，確保是橫向一整排
+    nodes.forEach(n => {
+      n.style.whiteSpace = 'pre';
+      n.style.width = vertical ? '' : 'max-content';
+      n.style.maxWidth = vertical ? '' : 'none';
+    });
+    const px = shrink();
+
+    // 真的塞不下（字會太小）才允許自動換行
+    if (px < 30 && !vertical) {
+      nodes.forEach(n => {
+        n.style.whiteSpace = 'pre-wrap';
+        n.style.width = 'auto';
+        n.style.maxWidth = '100%';
+        n.style.fontSize = base + 'px';
+      });
+      shrink();
     }
   }
 
@@ -617,6 +646,7 @@
   function buildFontChips() {
     ui.fontChips.replaceChildren();
     for (const f of FONTS) {
+      if (f.id === 'mono') continue; // 等寬放在「其它」的工具裡
       const b = el('button', 'fchip', '跑馬燈');
       b.type = 'button';
       b.dataset.font = f.id;
@@ -675,6 +705,7 @@
     { id: 'bold', label: '粗', title: '粗體' },
     { id: 'blink', label: '閃', title: '閃爍' },
     { id: 'mirror', label: '鏡', title: '鏡像' },
+    { id: 'vertical', label: '直', title: '直排文字' },
     { id: 'reset', label: '↺', title: '重設' }
   ];
 
@@ -707,6 +738,9 @@
     } else if (id === 'mirror') {
       S.mirror = !S.mirror;
       applyStage();
+    } else if (id === 'vertical') {
+      S.vertical = !S.vertical;
+      renderEffect();
     } else if (id === 'reset') {
       S.ink = DEFAULTS.ink;
       S.bg = DEFAULTS.bg;
@@ -715,6 +749,7 @@
       S.bold = true;
       S.blink = false;
       S.mirror = false;
+      S.vertical = false;
       S.paused = false;
       S.font = DEFAULTS.font;
       renderEffect();
@@ -747,6 +782,7 @@
       else if (id === 'bold') on = S.bold;
       else if (id === 'blink') on = S.blink;
       else if (id === 'mirror') on = S.mirror;
+      else if (id === 'vertical') on = S.vertical;
       b.classList.toggle('is-on', on);
     });
   }
@@ -898,6 +934,9 @@
       location.reload();
     });
 
+    // 面板內「編輯文字」
+    $('#sheetText').addEventListener('click', () => openTextModal());
+
     // 文字編輯
     $('#textDone').addEventListener('click', () => {
       const v = ui.textInput.value.replace(/\r/g, '');
@@ -906,6 +945,7 @@
       save();
       renderHero();
       renderScenes();
+      if (!ui.play.hidden) renderEffect();
     });
 
     ui.modal.addEventListener('click', e => {
