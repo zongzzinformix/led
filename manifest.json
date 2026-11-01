@@ -1,7 +1,7 @@
 {
-  "name": "LED 跑馬燈・彈幕",
-  "short_name": "LED 跑馬燈",
-  "description": "把手機變成 LED 跑馬燈與彈幕大螢幕：全螢幕顯示、可調顏色速度、LED 點陣質感、螢幕常亮。",
+  "name": "跑馬燈・LED 跑馬燈",
+  "short_name": "跑馬燈",
+  "description": "把手機變成 LED 跑馬燈：跑馬燈、霓虹文字、逐字顯示、切換文字、上下滾動，可調字體、顏色、速度、大小。",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",

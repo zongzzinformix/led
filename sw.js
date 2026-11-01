@@ -1,9 +1,9 @@
-/* Service Worker：讓 App 可以離線使用
+﻿/* Service Worker：讓 App 可以離線使用
    策略：網路優先（network-first）
    - 連得到伺服器時，永遠拿最新檔案（改程式馬上生效）
    - 連不到時，才用快取（離線也能開）
 */
-const CACHE = 'led-marquee-v2';
+const CACHE = 'led-marquee-v4';
 const ASSETS = [
   './',
   './index.html',
@@ -37,7 +37,6 @@ self.addEventListener('activate', (e) => {
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
-  // 只處理同源請求
   if (new URL(req.url).origin !== self.location.origin) return;
 
   e.respondWith(
@@ -50,7 +49,6 @@ self.addEventListener('fetch', (e) => {
       .catch(async () => {
         const hit = await caches.match(req);
         if (hit) return hit;
-        // 離線時直接開頁面（找不到檔案的導覽請求）
         if (req.mode === 'navigate') return caches.match('./index.html');
         return new Response('', { status: 504, statusText: 'offline' });
       })

@@ -4,13 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
 <meta name="color-scheme" content="dark">
-<title>LED 跑馬燈・彈幕</title>
+<title>跑馬燈・LED 跑馬燈</title>
 
 <meta name="theme-color" content="#000000">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="LED 跑馬燈">
+<meta name="apple-mobile-web-app-title" content="跑馬燈">
 <meta name="format-detection" content="telephone=no">
 
 <link rel="manifest" href="manifest.json">
@@ -18,99 +18,171 @@
 <link rel="icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="style.css">
 </head>
-<body data-mode="marquee">
+<body>
 
-<!-- ===== 顯示區 ===== -->
-<div id="stage" class="stage">
-  <div id="panel" class="panel">
-    <div class="panel__dots"></div>
-    <div id="led" class="led">
-      <div id="track" class="track"></div>
+<!-- ===================== 主畫面 ===================== -->
+<main id="app">
+
+  <!-- 首頁 -->
+  <section class="screen is-active" data-screen="home">
+    <header class="nav"><span class="nav__title">跑馬燈</span></header>
+
+    <div class="page">
+      <h2 class="sec">跑馬燈</h2>
+
+      <div class="hero" id="heroCard" role="button" tabindex="0" aria-label="全螢幕播放">
+        <div class="hero__stage">
+          <div class="hero__track" id="heroTrack">
+            <span class="hero__text" id="heroA"></span>
+            <span class="hero__text" id="heroB" aria-hidden="true"></span>
+          </div>
+        </div>
+        <button class="hero__edit" id="heroEdit" aria-label="編輯文字">✎</button>
+      </div>
+
+      <div class="fx-list" id="fxList"></div>
+
+      <h2 class="sec">更多</h2>
+      <div class="more">
+        <button class="bubble bubble--yellow" data-more="font" aria-label="字體">A</button>
+        <button class="bubble bubble--pink" data-more="ink" aria-label="字體顏色">✦</button>
+        <button class="bubble bubble--green" data-more="bg" aria-label="背景顏色">▣</button>
+        <button class="bubble bubble--blue" data-more="speed" aria-label="速度">⚡</button>
+      </div>
     </div>
+  </section>
+
+  <!-- 場景 -->
+  <section class="screen" data-screen="scenes" hidden>
+    <header class="nav"><span class="nav__title">場景</span></header>
+    <div class="page">
+      <button class="btn-save" id="saveScene">＋　儲存目前畫面</button>
+      <div class="scene-list" id="sceneList"></div>
+      <p class="empty" id="sceneEmpty">
+        還沒有場景<br>
+        <span>把常用的文字存起來，現場一鍵播放。</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- 我 -->
+  <section class="screen" data-screen="me" hidden>
+    <header class="nav"><span class="nav__title">我</span></header>
+    <div class="page">
+      <div class="card">
+        <label class="setting">
+          <span>螢幕常亮</span>
+          <input type="checkbox" class="switch" id="setWake">
+        </label>
+        <label class="setting">
+          <span>LED 點陣效果</span>
+          <input type="checkbox" class="switch" id="setDots">
+        </label>
+        <div class="setting setting--col">
+          <span>亮度</span>
+          <input type="range" id="setBright" min="30" max="100" step="5">
+        </div>
+        <div class="setting setting--col">
+          <span>預設效果</span>
+          <select id="setDefaultFx" class="select"></select>
+        </div>
+      </div>
+
+      <div class="card">
+        <details class="help">
+          <summary>使用說明</summary>
+          <ol>
+            <li>點首頁的預覽卡片 → 全螢幕播放。</li>
+            <li>播放時點一下畫面 → 開啟編輯面板。</li>
+            <li>編輯面板由上到下：字體、快慢、大小、字體顏色、背景顏色、其它。</li>
+            <li>「＋」可以把目前畫面存成場景。</li>
+            <li>建議橫放手機，字會更大。</li>
+            <li>想看全螢幕、不要網址列：Safari → 分享 → 加入主畫面。</li>
+          </ol>
+        </details>
+      </div>
+
+      <div class="card">
+        <button class="danger" id="resetAll">清除所有設定與場景</button>
+      </div>
+
+      <p class="ver">LED 跑馬燈　v1.0</p>
+    </div>
+  </section>
+
+  <!-- 底部頁籤 -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tab is-active" data-tab="home">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="4.5" width="17" height="15" rx="4"/><path d="M8 12h8"/></svg>
+      <span>跑馬燈</span>
+    </button>
+    <button class="tab" data-tab="scenes">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="17" height="17" rx="5"/><path d="M10 8.8l5.5 3.2-5.5 3.2z" class="fill"/></svg>
+      <span>場景</span>
+    </button>
+    <button class="tab" data-tab="me">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8.2" r="3.6"/><path d="M4.8 20c0-3.7 3.2-6.2 7.2-6.2s7.2 2.5 7.2 6.2"/></svg>
+      <span>我</span>
+    </button>
+  </nav>
+</main>
+
+<!-- ===================== 全螢幕播放 ===================== -->
+<section class="play is-clean" id="play" hidden>
+  <div class="stage" id="stage">
+    <div class="render" id="render"></div>
+    <div class="dim" id="dim"></div>
   </div>
 
-  <div id="danmaku" class="danmaku" aria-hidden="true"></div>
-  <div id="dimmer" class="dimmer"></div>
-
-  <div id="hint" class="hint" hidden>點一下畫面顯示設定</div>
-</div>
-
-<!-- ===== 控制列 ===== -->
-<div id="dock" class="dock">
-  <div class="dock__bar">
-    <div class="seg" role="tablist" aria-label="模式">
-      <button class="seg__btn is-active" data-mode="marquee">跑馬燈</button>
-      <button class="seg__btn" data-mode="danmaku">彈幕</button>
-    </div>
-    <span class="rot-hint">↻ 建議橫放</span>
-    <div class="actions">
-      <button id="btnFull" class="icon-btn" aria-label="全螢幕" title="全螢幕">⛶</button>
-      <button id="btnHide" class="icon-btn" aria-label="隱藏控制列" title="隱藏">✕</button>
-    </div>
+  <div class="play-chrome" id="playChrome">
+    <button class="round-btn" id="playBack" aria-label="返回">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>
+    </button>
+    <button class="round-btn" id="playSave" aria-label="儲存場景">＋</button>
   </div>
 
-  <!-- 跑馬燈 -->
-  <div class="pane" id="paneMarquee">
-    <textarea id="txt" rows="2" maxlength="180" placeholder="輸入要顯示的文字，可換行顯示多行"></textarea>
+  <div class="sheet-wrap" id="sheetWrap">
+    <div class="sheet-backdrop" id="sheetBackdrop"></div>
+    <div class="sheet" id="sheet">
+      <div class="sheet__head">
+        <span class="sheet__title" id="sheetTitle">字體</span>
+        <button class="sheet__close" id="sheetClose" aria-label="關閉">✕</button>
+      </div>
 
-    <div class="row">
-      <span class="row__label">顏色</span>
-      <div class="swatches" id="swatchesInk"></div>
-      <input type="color" id="color" class="color-input" aria-label="自訂文字顏色">
-    </div>
+      <div class="fonts" id="fontChips"></div>
 
-    <div class="row">
-      <span class="row__label">背景</span>
-      <div class="swatches" id="swatchesBg"></div>
-    </div>
+      <div class="slide-row" id="rowSpeed">
+        <span class="slide-end">慢</span>
+        <input type="range" id="rSpeed" min="0" max="100" step="1">
+        <span class="slide-end">快</span>
+      </div>
 
-    <div class="grid2">
-      <label class="slider"><span>字級 <b id="vSize">26</b></span><input type="range" id="rSize" min="6" max="60" step="1"></label>
-      <label class="slider"><span>速度 <b id="vSpeed">220</b></span><input type="range" id="rSpeed" min="40" max="600" step="10"></label>
-      <label class="slider"><span>亮度 <b id="vBright">100</b></span><input type="range" id="rBright" min="20" max="100" step="5"></label>
-      <label class="slider"><span>LED 點距 <b id="vPitch">9</b></span><input type="range" id="rPitch" min="4" max="22" step="1"></label>
-    </div>
+      <div class="slide-row" id="rowSize">
+        <span class="slide-end">小</span>
+        <input type="range" id="rSize" min="0" max="100" step="1">
+        <span class="slide-end">大</span>
+      </div>
 
-    <div class="row toggles">
-      <button class="chip" id="tGlow" data-on="true">光暈</button>
-      <button class="chip" id="tBlink">閃爍</button>
-      <button class="chip" id="tFont">字體：黑體</button>
-      <button class="chip" id="tWake" data-on="true">螢幕常亮</button>
-    </div>
+      <h3 class="sheet__label" id="labelInk">字體顏色</h3>
+      <div class="colors" id="inkColors"></div>
 
-    <div class="row presets" id="presets"></div>
-  </div>
+      <h3 class="sheet__label" id="labelBg">背景顏色</h3>
+      <div class="colors" id="bgColors"></div>
 
-  <!-- 彈幕 -->
-  <div class="pane" id="paneDanmaku" hidden>
-    <div class="send">
-      <input id="dmInput" type="text" maxlength="48" placeholder="輸入彈幕，按 Enter 送出" autocomplete="off">
-      <button id="dmSend" class="btn-primary">送出</button>
-    </div>
-
-    <div class="row presets" id="dmChips"></div>
-
-    <div class="grid2">
-      <label class="slider"><span>速度 <b id="vDmSpeed">240</b></span><input type="range" id="rDmSpeed" min="60" max="600" step="10"></label>
-      <label class="slider"><span>字級 <b id="vDmSize">7</b></span><input type="range" id="rDmSize" min="3" max="16" step="1"></label>
-    </div>
-
-    <div class="row toggles">
-      <button class="chip" id="tDmRandom" data-on="true">隨機顏色</button>
-      <button class="chip" id="tDmLoop" data-on="true">自動循環</button>
-      <button class="chip" id="tDmClear">清除畫面</button>
+      <h3 class="sheet__label">其它</h3>
+      <div class="tools" id="tools"></div>
     </div>
   </div>
+</section>
 
-  <details class="tip">
-    <summary>使用說明 / 加到主畫面</summary>
-    <ol>
-      <li>iPhone 用 <b>Safari</b> 開啟本頁。</li>
-      <li>點底部「分享」→「加入主畫面」，之後從主畫面啟動就是全螢幕。</li>
-      <li>把螢幕轉成橫向，字會更大更好看。</li>
-      <li>點畫面任一處可隱藏／顯示控制列。</li>
-    </ol>
-  </details>
+<!-- ===================== 文字編輯 ===================== -->
+<div class="modal" id="textModal" hidden>
+  <div class="modal__card">
+    <h3>文字內容</h3>
+    <textarea id="textInput" rows="3" maxlength="200" placeholder="輸入要顯示的文字"></textarea>
+    <p class="modal__hint">換行可以顯示多行</p>
+    <button class="btn-primary" id="textDone">完成</button>
+  </div>
 </div>
 
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
