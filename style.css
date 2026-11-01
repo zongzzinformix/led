@@ -624,11 +624,12 @@ input[type="range"] { accent-color: var(--pink); }
 }
 
 .neon {
-  text-shadow:
-    0 0 0.03em rgba(255, 255, 255, 0.95),
-    0 0 0.14em currentColor,
-    0 0 0.34em currentColor,
-    0 0 0.7em currentColor;
+  padding: 0.34em 0.22em;
+  text-shadow: none;
+  filter:
+    drop-shadow(0 0 0.04em currentColor)
+    drop-shadow(0 0 0.16em currentColor)
+    drop-shadow(0 0 0.34em currentColor);
 }
 
 /* 跑馬燈 */

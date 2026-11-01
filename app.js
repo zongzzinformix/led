@@ -49,6 +49,7 @@
     bold: true,
     speed: 42,
     size: 46,
+    gap: 40,
     blink: false,
     mirror: false,
     vertical: false,
@@ -84,6 +85,7 @@
     fontChips: $('#fontChips'),
     rSpeed: $('#rSpeed'),
     rSize: $('#rSize'),
+    rGap: $('#rGap'),
     inkColors: $('#inkColors'),
     bgColors: $('#bgColors'),
     tools: $('#tools'),
@@ -123,7 +125,15 @@
   const fontCss = id => fontOf(id).css;
 
   function pxPerSec() {
-    return 55 + S.speed * 5.5;
+    return S.speed * 6;
+  }
+
+  // 句子與句子之間的空白距離（跑馬燈 = 水平、上下滾動 = 垂直）
+  function gapPx(vertical) {
+    const base = vertical
+      ? (ui.stage.clientHeight || window.innerHeight)
+      : (ui.stage.clientWidth || window.innerWidth);
+    return base * (0.12 + (S.gap / 100) * 1.05);
   }
 
   function sizePx() {
@@ -206,6 +216,7 @@
     if (!EFFECTS.some(e => e.id === s.effect)) s.effect = DEFAULTS.effect;
     s.speed = clamp(Number(s.speed) || 0, 0, 100);
     s.size = clamp(Number(s.size) || 0, 0, 100);
+    s.gap = clamp(s.gap == null ? DEFAULTS.gap : Number(s.gap), 0, 100);
     s.brightness = clamp(Number(s.brightness) || 100, 30, 100);
     return s;
   }
@@ -230,12 +241,14 @@
     const px = clamp((ui.heroCard.clientHeight || 188) * 0.46, 24, 96);
 
     ui.heroCard.style.background = heroBg();
+    const gap = Math.max(24, ui.heroCard.clientWidth * 0.3);
     for (const n of [ui.heroA, ui.heroB]) {
       n.textContent = text;
       n.style.color = S.ink;
       n.style.fontFamily = fontCss(S.font);
       n.style.fontWeight = S.bold ? 700 : 400;
       n.style.fontSize = px + 'px';
+      n.style.paddingRight = gap + 'px';
     }
 
     const dist = ui.heroA.getBoundingClientRect().width || 1;
@@ -312,8 +325,9 @@
     S.bg = sc.bg;
     S.font = sc.font;
     S.bold = sc.bold !== false;
-    S.speed = clamp(Number(sc.speed) || 42, 0, 100);
-    S.size = clamp(Number(sc.size) || 46, 0, 100);
+    S.speed = sc.speed == null ? DEFAULTS.speed : clamp(Number(sc.speed), 0, 100);
+    S.size = sc.size == null ? DEFAULTS.size : clamp(Number(sc.size), 0, 100);
+    S.gap = sc.gap == null ? DEFAULTS.gap : clamp(Number(sc.gap), 0, 100);
     save();
     openPlay(sc.effect);
   }
@@ -330,7 +344,8 @@
       font: S.font,
       bold: S.bold,
       speed: S.speed,
-      size: S.size
+      size: S.size,
+      gap: S.gap
     });
     S.scenes = S.scenes.slice(0, 20);
     save();
@@ -417,16 +432,18 @@
   function renderEffect() {
     stopEffect();
     applyStage();
+    ui.render.style.justifyContent = '';
+    ui.render.style.alignItems = '';
 
     const token = effToken;
     const fx = S.effect;
 
-    if (fx === 'marquee') renderMarquee(token);
-    else if (fx === 'vertical') renderVertical(token);
-    else if (fx === 'neon') renderNeon();
+    if (fx === 'marquee') renderScroller(token);
+    else if (fx === 'vertical') renderScroller(token, { vertical: true });
+    else if (fx === 'neon') renderScroller(token, { neon: true });
     else if (fx === 'typer') renderTyper(token);
     else if (fx === 'switch') renderSwitch(token);
-    else renderMarquee(token);
+    else renderScroller(token);
 
     applyPause();
     syncSheet();
@@ -473,79 +490,66 @@
     }
   }
 
-  function renderMarquee(token) {
+  function renderScroller(token, opts = {}) {
+    const vertical = !!opts.vertical;
+    const neon = !!opts.neon;
     const lines = textLines();
-    const n = lines.length;
-    const h = ui.stage.clientHeight;
-    const fs = Math.max(10, Math.min(sizePx(), (h * 0.9) / (n * 1.18)));
+    const w = ui.stage.clientWidth || window.innerWidth;
+    const h = ui.stage.clientHeight || window.innerHeight;
 
-    const track = el('div', 'mq');
+    const fs = vertical
+      ? Math.min(sizePx() * 1.2, w * 0.9)
+      : Math.max(10, Math.min(sizePx(), (h * 0.9) / (lines.length * 1.18)));
+
+    const rows = vertical ? wrapLines(lines, fs, w * 0.9) : lines;
+    const gap = Math.round(gapPx(vertical));
+
+    const track = el('div', vertical ? 'vt' : 'mq');
     for (let i = 0; i < 2; i++) {
-      const copy = el('div', 'mq__copy');
+      const copy = el('div', vertical ? 'vt__copy' : 'mq__copy');
       if (i === 1) copy.setAttribute('aria-hidden', 'true');
-      for (const t of lines) {
-        const d = el('div', 'line', t);
+      for (const t of rows) {
+        const d = el('div', neon ? 'line neon' : 'line', t);
         d.style.fontSize = fs + 'px';
         copy.appendChild(d);
       }
+      // 句子之間的距離
+      if (vertical) copy.style.paddingBottom = gap + 'px';
+      else copy.style.paddingRight = gap + 'px';
       track.appendChild(copy);
     }
 
     ui.render.className = 'render';
+    ui.render.style.justifyContent = vertical ? 'center' : 'flex-start';
+    ui.render.style.alignItems = vertical ? 'flex-start' : 'center';
     ui.render.appendChild(track);
 
     const copy = track.firstElementChild;
-    const dist = copy.getBoundingClientRect().width || 1;
-    animBaseSpeed = pxPerSec();
-    anim = track.animate(
-      [{ transform: 'translate3d(0,0,0)' }, { transform: `translate3d(${-dist}px,0,0)` }],
-      { duration: Math.max(600, (dist / animBaseSpeed) * 1000), iterations: Infinity, easing: 'linear' }
-    );
-    if (token !== effToken) return;
-  }
+    const dist = (vertical ? copy.getBoundingClientRect().height : copy.getBoundingClientRect().width) || 1;
+    const speed = pxPerSec();
+    animBaseSpeed = speed || 1;
 
-  function renderVertical(token) {
-    const w = ui.stage.clientWidth || window.innerWidth;
-    const px = Math.min(sizePx() * 1.2, w * 0.9);
-    const wrapped = wrapLines(textLines(), px, w * 0.9);
-
-    const wrap = el('div', 'vt');
-    for (let i = 0; i < 2; i++) {
-      const copy = el('div', 'vt__copy');
-      if (i === 1) copy.setAttribute('aria-hidden', 'true');
-      for (const t of wrapped) {
-        const d = el('div', 'line', t);
-        d.style.fontSize = px + 'px';
-        copy.appendChild(d);
-      }
-      wrap.appendChild(copy);
+    // 速度 0 = 定格不動（只留一份、置中；太長則從頭顯示）
+    if (speed <= 0) {
+      const dup = track.lastElementChild;
+      if (dup && dup !== track.firstElementChild) dup.remove();
+      const textSize = Math.max(1, dist - gap);
+      const tooLong = vertical ? textSize > h : textSize > w;
+      copy.style.paddingRight = vertical ? copy.style.paddingRight : '0px';
+      copy.style.paddingBottom = vertical ? '0px' : copy.style.paddingBottom;
+      ui.render.style.justifyContent = vertical ? 'center' : (tooLong ? 'flex-start' : 'center');
+      ui.render.style.alignItems = vertical ? (tooLong ? 'flex-start' : 'center') : 'center';
+      return;
     }
 
-    ui.render.className = 'render';
-    ui.render.appendChild(wrap);
-
-    const copy = wrap.firstElementChild;
-    const dist = copy.getBoundingClientRect().height || 1;
-    animBaseSpeed = pxPerSec();
-    anim = wrap.animate(
-      [{ transform: 'translate3d(0,0,0)' }, { transform: `translate3d(0,${-dist}px,0)` }],
-      { duration: Math.max(900, (dist / animBaseSpeed) * 1000), iterations: Infinity, easing: 'linear' }
+    anim = track.animate(
+      vertical
+        ? [{ transform: 'translate3d(0,0,0)' }, { transform: `translate3d(0,${-dist}px,0)` }]
+        : [{ transform: 'translate3d(0,0,0)' }, { transform: `translate3d(${-dist}px,0,0)` }],
+      { duration: Math.max(600, (dist / speed) * 1000), iterations: Infinity, easing: 'linear' }
     );
     if (token !== effToken) return;
     applyPause();
-  }
-
-  function renderNeon() {
-    const fs = Math.max(12, sizePx() * 0.78);
-    const wrap = el('div', 'solo-wrap');
-    for (const t of textLines()) {
-      const d = el('div', 'line solo neon', t);
-      d.style.fontSize = fs + 'px';
-      wrap.appendChild(d);
-    }
-    ui.render.className = 'render';
-    ui.render.appendChild(wrap);
-    fitBox(wrap);
   }
 
   function renderTyper(token) {
@@ -562,6 +566,12 @@
     fitBox(wrap);
     const finalPx = parseFloat(line.style.fontSize) || fs;
     line.style.fontSize = finalPx + 'px';
+
+    // 速度 0 = 定格不動（直接顯示完整句子）
+    if (S.speed <= 0) {
+      line.textContent = full;
+      return;
+    }
 
     const interval = () => Math.round(190 - S.speed * 1.55);
     let i = 0;
@@ -625,6 +635,9 @@
         { duration: 380, easing: 'cubic-bezier(.2,.9,.2,1)' }
       );
     };
+
+    // 速度 0 = 定格在第一句
+    if (S.speed <= 0) return;
 
     switchTimer = setInterval(() => {
       if (token !== effToken || S.paused) return;
@@ -746,6 +759,7 @@
       S.bg = DEFAULTS.bg;
       S.speed = DEFAULTS.speed;
       S.size = DEFAULTS.size;
+      S.gap = DEFAULTS.gap;
       S.bold = true;
       S.blink = false;
       S.mirror = false;
@@ -764,6 +778,7 @@
 
     ui.rSpeed.value = String(S.speed);
     ui.rSize.value = String(S.size);
+    ui.rGap.value = String(S.gap);
 
     $$('.fchip', ui.fontChips).forEach(b => b.classList.toggle('is-active', b.dataset.font === S.font));
 
@@ -881,17 +896,29 @@
     // 面板滑桿
     ui.rSpeed.addEventListener('input', () => {
       S.speed = Number(ui.rSpeed.value);
-      if (anim) {
+      if (S.speed <= 0 || !anim) {
+        // 速度 0 直接重新繪製（定格置中），從 0 拉回來也重新開始
+        renderEffect();
+      } else {
         animBaseSpeed = animBaseSpeed || pxPerSec();
         anim.playbackRate = clamp(pxPerSec() / animBaseSpeed, 0.05, 20);
-      } else if (S.effect === 'typer' || S.effect === 'switch') {
-        renderEffect();
       }
       save();
     });
     ui.rSize.addEventListener('input', () => {
       S.size = Number(ui.rSize.value);
       renderEffect();
+      save();
+    });
+
+    let gapRaf = 0;
+    ui.rGap.addEventListener('input', () => {
+      S.gap = Number(ui.rGap.value);
+      if (gapRaf) return;
+      gapRaf = requestAnimationFrame(() => {
+        gapRaf = 0;
+        renderEffect();
+      });
       save();
     });
 

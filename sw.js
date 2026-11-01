@@ -1,9 +1,9 @@
-﻿/* Service Worker：讓 App 可以離線使用
+/* Service Worker：讓 App 可以離線使用
    策略：網路優先（network-first）
    - 連得到伺服器時，永遠拿最新檔案（改程式馬上生效）
    - 連不到時，才用快取（離線也能開）
 */
-const CACHE = 'led-marquee-v5';
+const CACHE = 'led-marquee-v7';
 const ASSETS = [
   './',
   './index.html',
