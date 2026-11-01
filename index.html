@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
+<meta name="color-scheme" content="dark">
+<title>LED 跑馬燈・彈幕</title>
+
+<meta name="theme-color" content="#000000">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LED 跑馬燈">
+<meta name="format-detection" content="telephone=no">
+
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-mode="marquee">
+
+<!-- ===== 顯示區 ===== -->
+<div id="stage" class="stage">
+  <div id="panel" class="panel">
+    <div class="panel__dots"></div>
+    <div id="led" class="led">
+      <div id="track" class="track"></div>
+    </div>
+  </div>
+
+  <div id="danmaku" class="danmaku" aria-hidden="true"></div>
+  <div id="dimmer" class="dimmer"></div>
+
+  <div id="hint" class="hint" hidden>點一下畫面顯示設定</div>
+</div>
+
+<!-- ===== 控制列 ===== -->
+<div id="dock" class="dock">
+  <div class="dock__bar">
+    <div class="seg" role="tablist" aria-label="模式">
+      <button class="seg__btn is-active" data-mode="marquee">跑馬燈</button>
+      <button class="seg__btn" data-mode="danmaku">彈幕</button>
+    </div>
+    <span class="rot-hint">↻ 建議橫放</span>
+    <div class="actions">
+      <button id="btnFull" class="icon-btn" aria-label="全螢幕" title="全螢幕">⛶</button>
+      <button id="btnHide" class="icon-btn" aria-label="隱藏控制列" title="隱藏">✕</button>
+    </div>
+  </div>
+
+  <!-- 跑馬燈 -->
+  <div class="pane" id="paneMarquee">
+    <textarea id="txt" rows="2" maxlength="180" placeholder="輸入要顯示的文字，可換行顯示多行"></textarea>
+
+    <div class="row">
+      <span class="row__label">顏色</span>
+      <div class="swatches" id="swatchesInk"></div>
+      <input type="color" id="color" class="color-input" aria-label="自訂文字顏色">
+    </div>
+
+    <div class="row">
+      <span class="row__label">背景</span>
+      <div class="swatches" id="swatchesBg"></div>
+    </div>
+
+    <div class="grid2">
+      <label class="slider"><span>字級 <b id="vSize">26</b></span><input type="range" id="rSize" min="6" max="60" step="1"></label>
+      <label class="slider"><span>速度 <b id="vSpeed">220</b></span><input type="range" id="rSpeed" min="40" max="600" step="10"></label>
+      <label class="slider"><span>亮度 <b id="vBright">100</b></span><input type="range" id="rBright" min="20" max="100" step="5"></label>
+      <label class="slider"><span>LED 點距 <b id="vPitch">9</b></span><input type="range" id="rPitch" min="4" max="22" step="1"></label>
+    </div>
+
+    <div class="row toggles">
+      <button class="chip" id="tGlow" data-on="true">光暈</button>
+      <button class="chip" id="tBlink">閃爍</button>
+      <button class="chip" id="tFont">字體：黑體</button>
+      <button class="chip" id="tWake" data-on="true">螢幕常亮</button>
+    </div>
+
+    <div class="row presets" id="presets"></div>
+  </div>
+
+  <!-- 彈幕 -->
+  <div class="pane" id="paneDanmaku" hidden>
+    <div class="send">
+      <input id="dmInput" type="text" maxlength="48" placeholder="輸入彈幕，按 Enter 送出" autocomplete="off">
+      <button id="dmSend" class="btn-primary">送出</button>
+    </div>
+
+    <div class="row presets" id="dmChips"></div>
+
+    <div class="grid2">
+      <label class="slider"><span>速度 <b id="vDmSpeed">240</b></span><input type="range" id="rDmSpeed" min="60" max="600" step="10"></label>
+      <label class="slider"><span>字級 <b id="vDmSize">7</b></span><input type="range" id="rDmSize" min="3" max="16" step="1"></label>
+    </div>
+
+    <div class="row toggles">
+      <button class="chip" id="tDmRandom" data-on="true">隨機顏色</button>
+      <button class="chip" id="tDmLoop" data-on="true">自動循環</button>
+      <button class="chip" id="tDmClear">清除畫面</button>
+    </div>
+  </div>
+
+  <details class="tip">
+    <summary>使用說明 / 加到主畫面</summary>
+    <ol>
+      <li>iPhone 用 <b>Safari</b> 開啟本頁。</li>
+      <li>點底部「分享」→「加入主畫面」，之後從主畫面啟動就是全螢幕。</li>
+      <li>把螢幕轉成橫向，字會更大更好看。</li>
+      <li>點畫面任一處可隱藏／顯示控制列。</li>
+    </ol>
+  </details>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+<script src="app.js" defer></script>
+</body>
+</html>
